@@ -90,7 +90,8 @@ runs:
 
     - if: always() && steps.attest.outcome == 'failure'
       shell: bash
-      run: echo "::warning::Audit report not attested. Add 'id-token: write' and 'attestations: write' to the job permissions, or set attest to false."
+      run: |
+        echo "::warning::Audit report not attested. Add 'id-token: write' and 'attestations: write' to the job permissions, or set attest to false."
 
     - if: always() && steps.audit.outputs.report != ''
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
