@@ -151,7 +151,7 @@ def summary_markdown(results: list[dict]) -> str:
         "| Agent | Hash chain | Events | Deletions | Breaks |\n|---|---|---|---|---|\n"
         f"{rows}\n\n"
         "The full report, `report.json` and the exported history are in the **`zizkadb-audit`** artifact"
-        " of this run, with a GitHub attestation on the report.\n"
+        f" of this run{', with a GitHub attestation on the report' if z.truthy('INPUT_ATTEST') else ''}.\n"
         f"<sub>How the hash chain works: [ZizkaDB security docs]({z.REPO_URL}/blob/main/docs/security/assessment.md)</sub>\n"
     )
 

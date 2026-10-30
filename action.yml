@@ -83,6 +83,7 @@ runs:
         INPUT_COMMENT: ${{ inputs.comment }}
         INPUT_IMAGE: ${{ inputs.image }}
         INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        INPUT_ATTEST: ${{ inputs.attest }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
       run: python3 "$GITHUB_ACTION_PATH/src/audit.py"
 
