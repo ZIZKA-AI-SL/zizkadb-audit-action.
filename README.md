@@ -46,7 +46,7 @@ The action:
    ```bash
    gh attestation verify report.md -R your-org/your-repo
    ```
-6. **Uploads** everything as the `zizkadb-audit` artifact (kept 90 days; download and archive it for longer retention), and posts a summary in the job summary and on the pull request.
+6. **Uploads** everything as a `zizkadb-audit-…` artifact (the summary names it; kept 90 days; download and archive it for longer retention), and posts a summary in the job summary and on the pull request.
 
 ## Audit a running ZizkaDB
 
@@ -86,6 +86,7 @@ jobs:
 | `fail-on-broken` | `true` | Fail the step when a hash chain is broken. |
 | `attest` | `true` | Attest the report and history (needs `id-token: write`, `attestations: write`). |
 | `comment` | `true` | Post and update a PR comment (needs `pull-requests: write`). |
+| `artifact-name` | `zizkadb-audit-<job>-<random>` | Name of the uploaded artifact; unique by default so matrix jobs and repeated steps do not collide. |
 | `image` | `ghcr.io/zizka-ai-sl/zizkadb:latest` | ZizkaDB image for the local instance; pin a version for reproducible runs. |
 | `github-token` | `${{ github.token }}` | Token used for the PR comment. |
 
@@ -97,6 +98,7 @@ jobs:
 | `agents` | Agents audited |
 | `events` | Events verified |
 | `report` | Path of `report.md` |
+| `artifact-name` | Name of the uploaded audit artifact |
 | `command-exit-code` | Exit code of `run` |
 
 ## Good to know

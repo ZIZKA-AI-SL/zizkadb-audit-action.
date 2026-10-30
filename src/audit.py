@@ -213,7 +213,9 @@ def main() -> int:
     summary = summary_markdown(results)
     if z.agent_limit_hit(output):
         summary += "\n" + z.agent_limit_markdown()
-    summary += f"\n{z.open_locally_markdown('zizkadb-audit')}\n{z.FOOTER}"
+    artifact = z.artifact_name("zizkadb-audit")
+    summary = summary.replace("**`zizkadb-audit`** artifact", f"**`{artifact}`** artifact")
+    summary += f"\n{z.open_locally_markdown(artifact)}\n{z.FOOTER}"
     z.write_summary(summary)
     status = z.upsert_pr_comment(MARKER, summary) if z.truthy("INPUT_COMMENT") else "disabled"
     z.log(f"PR comment: {status}")
@@ -223,6 +225,7 @@ def main() -> int:
     z.set_output("agents", str(len(results)))
     z.set_output("events", str(sum(r["events"] for r in results)))
     z.set_output("report", os.path.join(OUT_DIR, "report.md"))
+    z.set_output("artifact-name", artifact)
     z.set_output("command-exit-code", str(exit_code))
     if exit_code:
         return exit_code

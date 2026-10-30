@@ -34,6 +34,10 @@ inputs:
     description: Post (and update) a summary as a pull request comment. Needs `pull-requests write`.
     required: false
     default: "true"
+  artifact-name:
+    description: Name of the uploaded audit artifact. Default `zizkadb-audit-<job>-<random>`, unique per run of the action.
+    required: false
+    default: ""
   image:
     description: ZizkaDB image for the local instance.
     required: false
@@ -56,6 +60,9 @@ outputs:
   report:
     description: Path of the Markdown report.
     value: ${{ steps.audit.outputs.report }}
+  artifact-name:
+    description: Name of the uploaded audit artifact.
+    value: ${{ steps.audit.outputs.artifact-name }}
   command-exit-code:
     description: Exit code of `run`.
     value: ${{ steps.audit.outputs.command-exit-code }}
@@ -75,6 +82,7 @@ runs:
         INPUT_FAIL_ON_BROKEN: ${{ inputs.fail-on-broken }}
         INPUT_COMMENT: ${{ inputs.comment }}
         INPUT_IMAGE: ${{ inputs.image }}
+        INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
       run: python3 "$GITHUB_ACTION_PATH/src/audit.py"
 
@@ -96,7 +104,7 @@ runs:
     - if: always() && steps.audit.outputs.report != ''
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: zizkadb-audit
+        name: ${{ steps.audit.outputs.artifact-name }}
         path: zizkadb-audit/
         retention-days: 90
 
