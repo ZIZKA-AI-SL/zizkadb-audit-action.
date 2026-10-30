@@ -1,0 +1,119 @@
+name: ZizkaDB Audit - verify AI agent history
+description: "Prove your AI agent's history is intact: hash-chain check, exported history and an attested audit report. Open source."
+author: Zizka AI
+branding:
+  icon: shield
+  color: orange
+
+inputs:
+  run:
+    description: Command that runs your agent or its tests (e.g. `pytest tests/agent`). ZIZKADB_HOST and ZIZKADB_API_KEY are set for it.
+    required: false
+    default: ""
+  host:
+    description: Audit an existing ZizkaDB instead of starting one in the runner (e.g. your self-hosted server).
+    required: false
+    default: ""
+  api-key:
+    description: API key for `host` (pass it from a secret).
+    required: false
+    default: ""
+  agents:
+    description: Comma-separated agent names to audit. Default all.
+    required: false
+    default: ""
+  fail-on-broken:
+    description: Fail the step when a hash chain is broken.
+    required: false
+    default: "true"
+  attest:
+    description: Add a GitHub artifact attestation to the report (needs `id-token write` and `attestations write`).
+    required: false
+    default: "true"
+  comment:
+    description: Post (and update) a summary as a pull request comment. Needs `pull-requests write`.
+    required: false
+    default: "true"
+  image:
+    description: ZizkaDB image for the local instance.
+    required: false
+    default: ghcr.io/zizka-ai-sl/zizkadb:latest
+  github-token:
+    description: Token for the PR comment.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  intact:
+    description: "`true` when every audited agent's hash chain is intact, `false` otherwise, empty when nothing was recorded."
+    value: ${{ steps.audit.outputs.intact }}
+  agents:
+    description: Agents audited.
+    value: ${{ steps.audit.outputs.agents }}
+  events:
+    description: Events verified.
+    value: ${{ steps.audit.outputs.events }}
+  report:
+    description: Path of the Markdown report.
+    value: ${{ steps.audit.outputs.report }}
+  command-exit-code:
+    description: Exit code of `run`.
+    value: ${{ steps.audit.outputs.command-exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - id: audit
+      shell: bash
+      # The report is written first; the last step fails the job when needed.
+      continue-on-error: true
+      env:
+        INPUT_RUN: ${{ inputs.run }}
+        INPUT_HOST: ${{ inputs.host }}
+        INPUT_API_KEY: ${{ inputs.api-key }}
+        INPUT_AGENTS: ${{ inputs.agents }}
+        INPUT_FAIL_ON_BROKEN: ${{ inputs.fail-on-broken }}
+        INPUT_COMMENT: ${{ inputs.comment }}
+        INPUT_IMAGE: ${{ inputs.image }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: python3 "$GITHUB_ACTION_PATH/src/audit.py"
+
+    - id: attest
+      if: always() && inputs.attest == 'true' && steps.audit.outputs.report != ''
+      continue-on-error: true
+      uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+      with:
+        subject-path: |
+          zizkadb-audit/report.md
+          zizkadb-audit/report.json
+          zizkadb-audit/history/*.ndjson
+
+    - if: always() && steps.attest.outcome == 'failure'
+      shell: bash
+      run: echo "::warning::Audit report not attested. Add 'id-token: write' and 'attestations: write' to the job permissions, or set attest to false."
+
+    - if: always() && steps.audit.outputs.report != ''
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: zizkadb-audit
+        path: zizkadb-audit/
+        retention-days: 90
+
+    - if: always()
+      shell: bash
+      run: docker rm -f zizkadb-action >/dev/null 2>&1 || true
+
+    - if: always() && steps.audit.outcome == 'failure'
+      shell: bash
+      env:
+        CODE: ${{ steps.audit.outputs.command-exit-code }}
+        INTACT: ${{ steps.audit.outputs.intact }}
+      run: |
+        if [ -n "$CODE" ] && [ "$CODE" != "0" ]; then
+          echo "::error::Your command failed (exit $CODE). The ZizkaDB audit report is in the job summary."
+          exit "$CODE"
+        fi
+        if [ "$INTACT" = "false" ]; then
+          echo "::error::ZizkaDB hash chain is broken. See the audit report in the job summary."
+        fi
+        exit 1
