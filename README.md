@@ -106,6 +106,7 @@ jobs:
 - **One agent per run** on the local instance: open-source ZizkaDB records one agent per install. Multiple agents, fleets and agent-to-agent recording are in [ZizkaDB Cloud](https://db.zizka.ai).
 - **Telemetry.** The ZizkaDB SDK in your agent sends an anonymous install count; set `ZIZKADB_TELEMETRY: "false"` in the job's `env` to turn it off. [Details](https://github.com/ZIZKA-AI-SL/ZizkaDB/blob/main/docs/telemetry.md).
 - **Why did the agent fail?** Use [ZizkaDB Why](https://github.com/ZIZKA-AI-SL/zizkadb-why-action) for causal chains in your PR.
+- **In your editor:** the same Why and Audit answers in Claude Code and other coding agents: [ZizkaDB skills](https://github.com/ZIZKA-AI-SL/zizkadb-skills).
 - How the hash chain works: [ZizkaDB security docs](https://github.com/ZIZKA-AI-SL/ZizkaDB/blob/main/docs/security/assessment.md).
 
 ## Beyond CI
